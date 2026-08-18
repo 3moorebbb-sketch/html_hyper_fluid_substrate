@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Fluid Quantum Substrate [Batch Optimized]</title>
+    <title>Hyper-Fluid Quantum Substrate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
     <style>
@@ -139,12 +139,14 @@
     let nodes = [];
     const NUM_NODES = 800; 
     
+    // VARIABLES RESTORED HERE:
     let globalEnergy = 0.0; 
     let virtualScrollDepth = 0.0; 
     
     let isDrawing = false;
     let mouseX = -1000, mouseY = -1000;
     let lastTouchY = 0;
+    let frame = 0;
 
     const GRID_SIZE = 80; 
     let cols, rows;
@@ -267,8 +269,6 @@
     }
 
     for (let i = 0; i < NUM_NODES; i++) nodes.push(new Node());
-
-    let frame = 0;
 
     function animate() {
         frame++;
