@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Fluid Quantum Substrate</title>
+    <title>Hyper-Fluid Quantum Substrate [Optimized]</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #000;
             color: #e5e5e5;
-            overflow: hidden; /* We use virtual scrolling for a flawless experience */
+            overflow: hidden; 
             margin: 0;
             padding: 0;
             font-family: 'Space Mono', monospace;
-            touch-action: none; /* Disables native browser bounce/scroll */
+            touch-action: none; 
             user-select: none;
         }
         canvas {
@@ -29,7 +29,7 @@
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             z-index: 10;
-            pointer-events: none; /* Lets canvas receive all unhandled events */
+            pointer-events: none; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -41,7 +41,7 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            pointer-events: auto; /* Re-enable clicks for UI elements */
+            pointer-events: auto; 
             transition: all 0.3s ease;
         }
         .interactive-btn {
@@ -58,7 +58,6 @@
             font-weight: 700;
             text-shadow: 0 0 15px currentColor;
         }
-        /* Virtual Scrollbar Track */
         #scroll-track {
             width: 4px;
             height: 100px;
@@ -142,19 +141,31 @@
     const NUM_NODES = 800;
     
     // Global Physics States
-    let globalEnergy = 0.0; // 0.0 (Cold/Cyan) to 1.0 (Hot/Red)
-    let virtualScrollDepth = 0.0; // 0.0 (Euclidean) to 1.0 (Hyperbolic Fractal)
+    let globalEnergy = 0.0; 
+    let virtualScrollDepth = 0.0; 
     
     // Interaction Tracking
     let isDrawing = false;
     let mouseX = -1000, mouseY = -1000;
     let lastTouchY = 0;
 
+    // --- Spatial Grid for Lag-Free Performance ---
+    const GRID_SIZE = 80; // Max connection distance
+    let cols, rows;
+    let grid = [];
+
     function resize() {
         width = window.innerWidth;
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
+        
+        cols = Math.ceil(width / GRID_SIZE);
+        rows = Math.ceil(height / GRID_SIZE);
+        grid = new Array(cols * rows);
+        for(let i = 0; i < grid.length; i++) {
+            grid[i] = [];
+        }
     }
     window.addEventListener('resize', resize);
     resize();
@@ -169,11 +180,9 @@
         }
 
         update() {
-            // Accelerate wildly based on global injected energy
             let energyMultiplier = 1.0 + (globalEnergy * 3.0);
 
             if (isDrawing) {
-                // Intense Gravitational Attractor
                 let dx = mouseX - this.x;
                 let dy = mouseY - this.y;
                 let dist = Math.max(1, Math.hypot(dx, dy));
@@ -183,22 +192,17 @@
                     this.vx += (dx / dist) * force;
                     this.vy += (dy / dist) * force;
                     
-                    // Swirl effect intensifies with scroll depth
                     let swirl = force * (1.0 + virtualScrollDepth * 2);
                     this.vx += (dy / dist) * swirl;
                     this.vy -= (dx / dist) * swirl;
                 }
             } else {
-                // Ambient drift
                 this.vx += (Math.random() - 0.5) * 0.1 * energyMultiplier;
                 this.vy += (Math.random() - 0.5) * 0.1 * energyMultiplier;
-                
-                // Drift gently to center to maintain swarm coherence
                 this.vx += (width / 2 - this.x) * 0.00005;
                 this.vy += (height / 2 - this.y) * 0.00005;
             }
 
-            // Friction limits speed, decreases as energy rises
             let friction = 0.95 + (globalEnergy * 0.03); 
             this.vx *= friction;
             this.vy *= friction;
@@ -206,11 +210,17 @@
             this.x += this.vx;
             this.y += this.vy;
 
-            // Screen Wrap
             if (this.x < 0) this.x += width;
             if (this.x > width) this.x -= width;
             if (this.y < 0) this.y += height;
             if (this.y > height) this.y -= height;
+            
+            // Add to spatial grid for fast collision checking
+            let cx = Math.floor(this.x / GRID_SIZE);
+            let cy = Math.floor(this.y / GRID_SIZE);
+            if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+                grid[cy * cols + cx].push(this);
+            }
         }
 
         draw(hue) {
@@ -224,10 +234,9 @@
         }
     }
 
-    // Geometry warping based on Virtual Scroll
     function drawWarpedLine(x1, y1, x2, y2, depthPhase) {
         if (virtualScrollDepth < 0.05) {
-            ctx.lineTo(x2, y2); // Pure straight lines at top of page
+            ctx.lineTo(x2, y2); 
             return;
         }
         
@@ -238,7 +247,6 @@
         let mx = x1 + dx * 0.5;
         let my = y1 + dy * 0.5;
 
-        // The math bends space. As scrollDepth increases, the fold becomes extreme.
         let foldAngle = Math.atan2(dy, dx) + (Math.PI * virtualScrollDepth * Math.sin(depthPhase));
         let foldDist = dist * virtualScrollDepth * 0.8;
 
@@ -255,65 +263,92 @@
     function animate() {
         frame++;
 
-        // Calculate Global Color Wavelength based on Energy
-        // 180 = Cyan (Cold). 340 = Pink/Red (Hot).
         let currentHue = 180 + (globalEnergy * 160);
         let currentColor = `hsl(${currentHue}, 100%, 60%)`;
         let uiColor = `hsla(${currentHue}, 100%, 60%, 0.3)`;
 
-        // Decay energy naturally
         globalEnergy = Math.max(0, globalEnergy - 0.005);
 
-        // 1. Draw Background
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - (globalEnergy * 0.05)})`; // Trails get longer as it gets hotter
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - (globalEnergy * 0.05)})`;
         ctx.fillRect(0, 0, width, height);
 
-        // 2. Additive Blending for blinding light
         ctx.globalCompositeOperation = 'lighter';
 
+        // Clear Spatial Grid
+        for(let i = 0; i < grid.length; i++) {
+            grid[i].length = 0;
+        }
+
+        // Update nodes and populate grid
+        for (let i = 0; i < NUM_NODES; i++) {
+            nodes[i].update();
+        }
+
         let linksThisFrame = 0;
-        const MAX_DIST_SQ = 6400; // 80px connection radius
+        const MAX_DIST_SQ = GRID_SIZE * GRID_SIZE; 
 
         ctx.lineWidth = 0.5 + (globalEnergy * 1.5);
         
-        // Render Connections
-        for (let i = 0; i < NUM_NODES; i++) {
-            let n1 = nodes[i];
-
-            for (let j = i + 1; j < NUM_NODES; j++) {
-                let n2 = nodes[j];
+        // Fast Grid-based Connections
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                let cellIdx = y * cols + x;
+                let cellNodes = grid[cellIdx];
                 
-                if (Math.abs(n1.x - n2.x) > 80 || Math.abs(n1.y - n2.y) > 80) continue;
+                if (cellNodes.length === 0) continue;
 
-                let dx = n1.x - n2.x;
-                let dy = n1.y - n2.y;
-                let distSq = dx*dx + dy*dy;
+                // Find neighbor cells
+                let neighbors = [];
+                for (let ny = -1; ny <= 1; ny++) {
+                    for (let nx = -1; nx <= 1; nx++) {
+                        let nc = x + nx;
+                        let nr = y + ny;
+                        if (nc >= 0 && nc < cols && nr >= 0 && nr < rows) {
+                            neighbors.push(nr * cols + nc);
+                        }
+                    }
+                }
 
-                if (distSq < MAX_DIST_SQ) {
-                    linksThisFrame++;
-                    let dist = Math.sqrt(distSq);
-                    let opacity = (1 - (dist / 80)) * (0.3 + globalEnergy * 0.7);
-                    
-                    ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${opacity})`;
-                    ctx.beginPath();
-                    ctx.moveTo(n1.x, n1.y);
-                    
-                    // Pass the combined phase to randomize the fractal folds slightly
-                    drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
-                    
-                    ctx.stroke();
+                for (let i = 0; i < cellNodes.length; i++) {
+                    let n1 = cellNodes[i];
+
+                    // Check neighbors in grid
+                    for (let nIdx of neighbors) {
+                        let neighborNodes = grid[nIdx];
+                        for (let k = 0; k < neighborNodes.length; k++) {
+                            let n2 = neighborNodes[k];
+                            
+                            // Prevent duplicate drawing and self-drawing
+                            if (n1 === n2 || n1.x > n2.x) continue;
+
+                            let dx = n1.x - n2.x;
+                            let dy = n1.y - n2.y;
+                            let distSq = dx*dx + dy*dy;
+
+                            if (distSq < MAX_DIST_SQ) {
+                                linksThisFrame++;
+                                let dist = Math.sqrt(distSq);
+                                let opacity = (1 - (dist / GRID_SIZE)) * (0.3 + globalEnergy * 0.7);
+                                
+                                ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${opacity})`;
+                                ctx.beginPath();
+                                ctx.moveTo(n1.x, n1.y);
+                                drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
+                                ctx.stroke();
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Render Nodes
+        // Draw Nodes
         for (let i = 0; i < NUM_NODES; i++) {
-            nodes[i].update();
             nodes[i].draw(currentHue);
         }
 
-        // Draw Interaction Core
+        // Interaction Core
         if (isDrawing) {
             ctx.beginPath();
             ctx.arc(mouseX, mouseY, 15 + (globalEnergy * 20), 0, Math.PI * 2);
@@ -324,7 +359,7 @@
             ctx.shadowBlur = 0;
         }
 
-        // --- UPDATE UI SYNC ---
+        // Update UI 
         if (frame % 3 === 0) {
             statEnergy.innerText = (globalEnergy * 100).toFixed(1) + "%";
             statWave.innerText = Math.floor(450 + (globalEnergy * 250)) + " nm";
@@ -334,7 +369,6 @@
             scrollThumb.style.height = Math.max(5, virtualScrollDepth * 100) + "%";
             scrollThumb.style.top = (virtualScrollDepth * (100 - parseFloat(scrollThumb.style.height))) + "%";
 
-            // Update UI Colors to match wavelength
             document.documentElement.style.color = currentColor;
             hudPrimary.style.borderColor = uiColor;
             hudSecondary.style.borderColor = uiColor;
@@ -346,8 +380,6 @@
         requestAnimationFrame(animate);
     }
 
-    // --- INTERACTION ENGINE ---
-
     function injectEnergy(amount) {
         globalEnergy = Math.min(1.0, globalEnergy + amount);
     }
@@ -355,7 +387,7 @@
     function setMousePos(x, y) {
         mouseX = x;
         mouseY = y;
-        injectEnergy(0.02); // Dragging adds energy
+        injectEnergy(0.02); 
     }
 
     // Mouse Events
@@ -371,14 +403,14 @@
     });
     window.addEventListener('mouseup', () => isDrawing = false);
 
-    // Virtual Scroll (Mouse Wheel)
+    // Virtual Scroll
     window.addEventListener('wheel', (e) => {
         virtualScrollDepth += e.deltaY * 0.001;
         virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
-        injectEnergy(0.05); // Scrolling adds energy
+        injectEnergy(0.05); 
     });
 
-    // Touch Events for Mobile (Handles dragging AND virtual scrolling)
+    // Touch Events
     window.addEventListener('touchstart', (e) => {
         if (e.target.tagName !== 'BUTTON') {
             isDrawing = true;
@@ -392,35 +424,32 @@
         if (isDrawing) {
             setMousePos(e.touches[0].clientX, e.touches[0].clientY);
             
-            // Calculate fake scroll based on vertical swipe
             let currentTouchY = e.touches[0].clientY;
             let deltaY = lastTouchY - currentTouchY;
             virtualScrollDepth += deltaY * 0.002;
             virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
             lastTouchY = currentTouchY;
             
-            e.preventDefault(); // Stop native mobile bounce
+            e.preventDefault(); 
         }
     }, { passive: false });
     window.addEventListener('touchend', () => isDrawing = false);
 
-    // Reset Detonation Button
+    // Reset Detonation
     btnReset.addEventListener('click', () => {
         globalEnergy = 0.0;
         virtualScrollDepth = 0.0;
         
-        // Physical shockwave
         for (let n of nodes) {
             let dx = width/2 - n.x;
             let dy = height/2 - n.y;
             let dist = Math.hypot(dx, dy);
-            let force = -2000 / (dist + 10); // Negative gravity = explosion
+            let force = -2000 / (dist + 10); 
             n.vx += (dx / dist) * force;
             n.vy += (dy / dist) * force;
         }
     });
 
-    // Boot
     animate();
 })();
 </script>
