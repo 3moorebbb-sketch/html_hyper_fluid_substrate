@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper-Fluid Quantum Substrate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #e5e5e5;
+            overflow: hidden; /* We use virtual scrolling for a flawless experience */
+            margin: 0;
+            padding: 0;
+            font-family: 'Space Mono', monospace;
+            touch-action: none; /* Disables native browser bounce/scroll */
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.2)) contrast(1.2) brightness(1.2);
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 10;
+            pointer-events: none; /* Lets canvas receive all unhandled events */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        .glass-panel {
+            background: rgba(5, 5, 10, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            pointer-events: auto; /* Re-enable clicks for UI elements */
+            transition: all 0.3s ease;
+        }
+        .interactive-btn {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .interactive-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px currentColor;
+        }
+        .hud-value {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            text-shadow: 0 0 15px currentColor;
+        }
+        /* Virtual Scrollbar Track */
+        #scroll-track {
+            width: 4px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        #scroll-thumb {
+            width: 100%;
+            background: currentColor;
+            position: absolute;
+            top: 0;
+            border-radius: 2px;
+            transition: top 0.1s ease, height 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="substrateCanvas"></canvas>
+
+    <div id="ui-layer">
+        <header class="flex justify-between items-start gap-4">
+            <div class="glass-panel p-5 max-w-sm shadow-2xl transition-colors duration-300" id="hud-primary">
+                <h1 class="font-bold text-lg tracking-widest uppercase mb-1">Hyper-Fluid Substrate</h1>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Scroll/Swipe to warp topology. Drag to inject thermal energy and shift the wavelength.
+                </p>
+                <div class="mt-4 flex items-center gap-3">
+                    <div id="scroll-track">
+                        <div id="scroll-thumb" style="height: 10%;"></div>
+                    </div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest">
+                        Z-Depth Topology<br>
+                        <span id="stat-depth" class="text-sm hud-value">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 min-w-[220px] shadow-2xl text-right transition-colors duration-300" id="hud-secondary">
+                <h2 class="text-[10px] text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Quantum State</h2>
+                <div class="flex justify-between mb-1 items-end">
+                    <span class="text-xs text-gray-400">Wavelength</span>
+                    <span id="stat-wave" class="text-sm hud-value">450 nm</span>
+                </div>
+                <div class="flex justify-between mb-1 items-end">
+                    <span class="text-xs text-gray-400">Energy Level</span>
+                    <span id="stat-energy" class="text-sm hud-value">0.0%</span>
+                </div>
+                <div class="flex justify-between mt-3 items-end">
+                    <span class="text-[10px] uppercase tracking-widest">Active Links</span>
+                    <span id="stat-links" class="text-lg hud-value">0</span>
+                </div>
+            </div>
+        </header>
+
+        <footer class="flex justify-center pb-4">
+            <button id="btn-reset" class="glass-panel interactive-btn px-8 py-3 text-xs uppercase tracking-widest font-bold transition-colors duration-300">
+                Detonate & Reset Substrate
+            </button>
+        </footer>
+    </div>
+
+<script>
+(() => {
+    const canvas = document.getElementById('substrateCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    // UI Elements
+    const statDepth = document.getElementById('stat-depth');
+    const statWave = document.getElementById('stat-wave');
+    const statEnergy = document.getElementById('stat-energy');
+    const statLinks = document.getElementById('stat-links');
+    const scrollThumb = document.getElementById('scroll-thumb');
+    const hudPrimary = document.getElementById('hud-primary');
+    const hudSecondary = document.getElementById('hud-secondary');
+    const btnReset = document.getElementById('btn-reset');
+
+    let width, height;
+    let nodes = [];
+    const NUM_NODES = 800;
+    
+    // Global Physics States
+    let globalEnergy = 0.0; // 0.0 (Cold/Cyan) to 1.0 (Hot/Red)
+    let virtualScrollDepth = 0.0; // 0.0 (Euclidean) to 1.0 (Hyperbolic Fractal)
+    
+    // Interaction Tracking
+    let isDrawing = false;
+    let mouseX = -1000, mouseY = -1000;
+    let lastTouchY = 0;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Node {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = (Math.random() - 0.5) * 2;
+            this.basePhase = Math.random() * Math.PI * 2;
+        }
+
+        update() {
+            // Accelerate wildly based on global injected energy
+            let energyMultiplier = 1.0 + (globalEnergy * 3.0);
+
+            if (isDrawing) {
+                // Intense Gravitational Attractor
+                let dx = mouseX - this.x;
+                let dy = mouseY - this.y;
+                let dist = Math.max(1, Math.hypot(dx, dy));
+                
+                if (dist < 400) {
+                    let force = 2000 / (dist * dist + 100); 
+                    this.vx += (dx / dist) * force;
+                    this.vy += (dy / dist) * force;
+                    
+                    // Swirl effect intensifies with scroll depth
+                    let swirl = force * (1.0 + virtualScrollDepth * 2);
+                    this.vx += (dy / dist) * swirl;
+                    this.vy -= (dx / dist) * swirl;
+                }
+            } else {
+                // Ambient drift
+                this.vx += (Math.random() - 0.5) * 0.1 * energyMultiplier;
+                this.vy += (Math.random() - 0.5) * 0.1 * energyMultiplier;
+                
+                // Drift gently to center to maintain swarm coherence
+                this.vx += (width / 2 - this.x) * 0.00005;
+                this.vy += (height / 2 - this.y) * 0.00005;
+            }
+
+            // Friction limits speed, decreases as energy rises
+            let friction = 0.95 + (globalEnergy * 0.03); 
+            this.vx *= friction;
+            this.vy *= friction;
+
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Screen Wrap
+            if (this.x < 0) this.x += width;
+            if (this.x > width) this.x -= width;
+            if (this.y < 0) this.y += height;
+            if (this.y > height) this.y -= height;
+        }
+
+        draw(hue) {
+            let speed = Math.hypot(this.vx, this.vy);
+            let size = 1.0 + (globalEnergy * 2.0) + (speed * 0.05);
+
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsl(${hue}, 100%, ${60 + (globalEnergy*40)}%)`;
+            ctx.fill();
+        }
+    }
+
+    // Geometry warping based on Virtual Scroll
+    function drawWarpedLine(x1, y1, x2, y2, depthPhase) {
+        if (virtualScrollDepth < 0.05) {
+            ctx.lineTo(x2, y2); // Pure straight lines at top of page
+            return;
+        }
+        
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let dist = Math.hypot(dx, dy);
+        
+        let mx = x1 + dx * 0.5;
+        let my = y1 + dy * 0.5;
+
+        // The math bends space. As scrollDepth increases, the fold becomes extreme.
+        let foldAngle = Math.atan2(dy, dx) + (Math.PI * virtualScrollDepth * Math.sin(depthPhase));
+        let foldDist = dist * virtualScrollDepth * 0.8;
+
+        let fx = mx + Math.cos(foldAngle) * foldDist;
+        let fy = my + Math.sin(foldAngle) * foldDist;
+
+        ctx.bezierCurveTo(mx, my, fx, fy, x2, y2);
+    }
+
+    for (let i = 0; i < NUM_NODES; i++) nodes.push(new Node());
+
+    let frame = 0;
+
+    function animate() {
+        frame++;
+
+        // Calculate Global Color Wavelength based on Energy
+        // 180 = Cyan (Cold). 340 = Pink/Red (Hot).
+        let currentHue = 180 + (globalEnergy * 160);
+        let currentColor = `hsl(${currentHue}, 100%, 60%)`;
+        let uiColor = `hsla(${currentHue}, 100%, 60%, 0.3)`;
+
+        // Decay energy naturally
+        globalEnergy = Math.max(0, globalEnergy - 0.005);
+
+        // 1. Draw Background
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - (globalEnergy * 0.05)})`; // Trails get longer as it gets hotter
+        ctx.fillRect(0, 0, width, height);
+
+        // 2. Additive Blending for blinding light
+        ctx.globalCompositeOperation = 'lighter';
+
+        let linksThisFrame = 0;
+        const MAX_DIST_SQ = 6400; // 80px connection radius
+
+        ctx.lineWidth = 0.5 + (globalEnergy * 1.5);
+        
+        // Render Connections
+        for (let i = 0; i < NUM_NODES; i++) {
+            let n1 = nodes[i];
+
+            for (let j = i + 1; j < NUM_NODES; j++) {
+                let n2 = nodes[j];
+                
+                if (Math.abs(n1.x - n2.x) > 80 || Math.abs(n1.y - n2.y) > 80) continue;
+
+                let dx = n1.x - n2.x;
+                let dy = n1.y - n2.y;
+                let distSq = dx*dx + dy*dy;
+
+                if (distSq < MAX_DIST_SQ) {
+                    linksThisFrame++;
+                    let dist = Math.sqrt(distSq);
+                    let opacity = (1 - (dist / 80)) * (0.3 + globalEnergy * 0.7);
+                    
+                    ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${opacity})`;
+                    ctx.beginPath();
+                    ctx.moveTo(n1.x, n1.y);
+                    
+                    // Pass the combined phase to randomize the fractal folds slightly
+                    drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
+                    
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Render Nodes
+        for (let i = 0; i < NUM_NODES; i++) {
+            nodes[i].update();
+            nodes[i].draw(currentHue);
+        }
+
+        // Draw Interaction Core
+        if (isDrawing) {
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, 15 + (globalEnergy * 20), 0, Math.PI * 2);
+            ctx.fillStyle = "#FFF";
+            ctx.shadowBlur = 50;
+            ctx.shadowColor = currentColor;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // --- UPDATE UI SYNC ---
+        if (frame % 3 === 0) {
+            statEnergy.innerText = (globalEnergy * 100).toFixed(1) + "%";
+            statWave.innerText = Math.floor(450 + (globalEnergy * 250)) + " nm";
+            statDepth.innerText = virtualScrollDepth.toFixed(2);
+            statLinks.innerText = linksThisFrame.toLocaleString();
+            
+            scrollThumb.style.height = Math.max(5, virtualScrollDepth * 100) + "%";
+            scrollThumb.style.top = (virtualScrollDepth * (100 - parseFloat(scrollThumb.style.height))) + "%";
+
+            // Update UI Colors to match wavelength
+            document.documentElement.style.color = currentColor;
+            hudPrimary.style.borderColor = uiColor;
+            hudSecondary.style.borderColor = uiColor;
+            btnReset.style.borderColor = uiColor;
+            btnReset.style.color = currentColor;
+            scrollThumb.style.backgroundColor = currentColor;
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    // --- INTERACTION ENGINE ---
+
+    function injectEnergy(amount) {
+        globalEnergy = Math.min(1.0, globalEnergy + amount);
+    }
+
+    function setMousePos(x, y) {
+        mouseX = x;
+        mouseY = y;
+        injectEnergy(0.02); // Dragging adds energy
+    }
+
+    // Mouse Events
+    window.addEventListener('mousedown', (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+            isDrawing = true;
+            setMousePos(e.clientX, e.clientY);
+            injectEnergy(0.1);
+        }
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (isDrawing) setMousePos(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => isDrawing = false);
+
+    // Virtual Scroll (Mouse Wheel)
+    window.addEventListener('wheel', (e) => {
+        virtualScrollDepth += e.deltaY * 0.001;
+        virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
+        injectEnergy(0.05); // Scrolling adds energy
+    });
+
+    // Touch Events for Mobile (Handles dragging AND virtual scrolling)
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+            isDrawing = true;
+            lastTouchY = e.touches[0].clientY;
+            setMousePos(e.touches[0].clientX, e.touches[0].clientY);
+            injectEnergy(0.1);
+        }
+    }, { passive: false });
+    
+    window.addEventListener('touchmove', (e) => {
+        if (isDrawing) {
+            setMousePos(e.touches[0].clientX, e.touches[0].clientY);
+            
+            // Calculate fake scroll based on vertical swipe
+            let currentTouchY = e.touches[0].clientY;
+            let deltaY = lastTouchY - currentTouchY;
+            virtualScrollDepth += deltaY * 0.002;
+            virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
+            lastTouchY = currentTouchY;
+            
+            e.preventDefault(); // Stop native mobile bounce
+        }
+    }, { passive: false });
+    window.addEventListener('touchend', () => isDrawing = false);
+
+    // Reset Detonation Button
+    btnReset.addEventListener('click', () => {
+        globalEnergy = 0.0;
+        virtualScrollDepth = 0.0;
+        
+        // Physical shockwave
+        for (let n of nodes) {
+            let dx = width/2 - n.x;
+            let dy = height/2 - n.y;
+            let dist = Math.hypot(dx, dy);
+            let force = -2000 / (dist + 10); // Negative gravity = explosion
+            n.vx += (dx / dist) * force;
+            n.vy += (dy / dist) * force;
+        }
+    });
+
+    // Boot
+    animate();
+})();
+</script>
+</body>
+</html>
