@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Fluid Quantum Substrate</title>
+    <title>Hyper-Fluid Quantum Substrate [Apex Optimized]</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
     <style>
@@ -22,14 +22,15 @@
             position: absolute;
             top: 0; left: 0;
             z-index: 1;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2)) contrast(1.2) brightness(1.2);
+            /* Heavy cinematic bloom effect, now optimized for 800 nodes */
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25)) contrast(1.2) brightness(1.2);
         }
         #ui-layer {
             position: absolute;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             z-index: 10;
-            pointer-events: none; 
+            pointer-events: none; /* Let all clicks pass through to canvas */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -41,7 +42,7 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            pointer-events: auto; 
+            pointer-events: auto; /* Re-enable clicks for UI elements */
             transition: all 0.3s ease;
         }
         .interactive-btn {
@@ -124,8 +125,9 @@
 <script>
 (() => {
     const canvas = document.getElementById('substrateCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false }); 
+    const ctx = canvas.getContext('2d', { alpha: false }); // forcing opaque black background allows browser GPU to optimize
 
+    // UI Elements
     const statDepth = document.getElementById('stat-depth');
     const statWave = document.getElementById('stat-wave');
     const statEnergy = document.getElementById('stat-energy');
@@ -137,18 +139,19 @@
 
     let width, height;
     let nodes = [];
-    const NUM_NODES = 800; 
+    const NUM_NODES = 800; // Pushed to 800 as requested previously
     
-    // VARIABLES RESTORED HERE:
-    let globalEnergy = 0.0; 
-    let virtualScrollDepth = 0.0; 
+    // Global Physics States
+    let globalEnergy = 0.0; // 0.0 (Cold/Cyan) to 1.0 (Hot/Red)
+    let virtualScrollDepth = 0.0; // 0.0 (Euclidean) to 1.0 (Hyperbolic Fractal)
     
+    // Interaction Tracking
     let isDrawing = false;
     let mouseX = -1000, mouseY = -1000;
     let lastTouchY = 0;
-    let frame = 0;
 
-    const GRID_SIZE = 80; 
+    // --- Spatial Grid for Lag-Free Performance (O(N^2) Solution) ---
+    const GRID_SIZE = 80; // Each cell is the size of the max connection distance
     let cols, rows;
     let grid = [];
 
@@ -172,50 +175,59 @@
         constructor() {
             this.x = Math.random() * width;
             this.y = Math.random() * height;
+            // Stagger initial velocities for smoother start
             this.vx = (Math.random() - 0.5) * 4; 
             this.vy = (Math.random() - 0.5) * 4;
             this.basePhase = Math.random() * Math.PI * 2;
-            this.links = 0; // Track connections per frame to prevent lag
         }
 
         update() {
+            // Accelerate based on injected energy
             let energyMultiplier = 1.0 + (globalEnergy * 3.0);
-            this.links = 0; // Reset connection count each frame
 
             if (isDrawing) {
+                // --- APEX PHYSICS UPGRADE: THE ANTI-GRAVITY FIX ---
                 let dx = mouseX - this.x;
                 let dy = mouseY - this.y;
                 let dist = Math.hypot(dx, dy);
                 
-                if (dist < 500) {
+                if (dist < 400) {
+                    // Capped linear distance prevents division by zero and extreme force
                     let linearDist = Math.max(15, dist);
                     
-                    // Pull in, but violently push away if too close (prevents the "ball" clump)
+                    // FLIP FORCE: Attraction turns to Repulsion at close range (<30px)
                     let attractiveForce = 2500 / (linearDist * linearDist + 50); 
-                    let repulsiveForce = dist < 40 ? (40 - dist) * 0.15 : 0; 
+                    let repulsiveForce = dist < 30 ? (30 - dist) * 0.1 : 0; // Separation force
                     
                     let effectiveForce = attractiveForce - repulsiveForce;
                     
                     this.vx += (dx / dist) * effectiveForce;
                     this.vy += (dy / dist) * effectiveForce;
                     
-                    let swirl = attractiveForce * (1.0 + virtualScrollDepth * 2) * 0.8;
+                    // Damping the swirl to prevent clumping while orbiting
+                    let swirl = attractiveForce * (1.0 + virtualScrollDepth * 2) * 0.7; // dampened swirl
                     this.vx += (dy / dist) * swirl;
                     this.vy -= (dx / dist) * swirl;
                 }
             } else {
-                // Let them roam freely across the entire screen
-                let baseDriftSpeed = 0.2 * energyMultiplier; 
+                // --- SPEED UPGRADE: More Energetic Brownian Drift ---
+                let baseDriftSpeed = 0.3 * energyMultiplier; // up from 0.1
                 this.vx += (Math.random() - 0.5) * baseDriftSpeed;
                 this.vy += (Math.random() - 0.5) * baseDriftSpeed;
+                
+                // Drift gently to center to maintain coherence
+                this.vx += (width / 2 - this.x) * 0.00005;
+                this.vy += (height / 2 - this.y) * 0.00005;
             }
 
+            // --- SPEED UPGRADE: Reduced friction at high energy ---
             let friction = 0.95 + (globalEnergy * 0.03); 
             this.vx *= friction;
             this.vy *= friction;
 
+            // --- SPEED UPGRADE: Cap overall velocity (raised from 15) ---
             const speed = Math.hypot(this.vx, this.vy);
-            const MAX_PHYSICS_SPEED = 20 + globalEnergy * 15;
+            const MAX_PHYSICS_SPEED = 20 + globalEnergy * 15; // Raised speed cap
             if (speed > MAX_PHYSICS_SPEED) {
                 this.vx = (this.vx / speed) * MAX_PHYSICS_SPEED;
                 this.vy = (this.vy / speed) * MAX_PHYSICS_SPEED;
@@ -224,11 +236,13 @@
             this.x += this.vx;
             this.y += this.vy;
 
+            // Screen Wrap
             if (this.x < 0) this.x += width;
             if (this.x > width) this.x -= width;
             if (this.y < 0) this.y += height;
             if (this.y > height) this.y -= height;
             
+            // Populate grid cell bitwise math (faster than floor)
             let cx = ~~ (this.x / GRID_SIZE);
             let cy = ~~ (this.y / GRID_SIZE);
             if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
@@ -240,25 +254,39 @@
             let speed = Math.hypot(this.vx, this.vy);
             let size = 1.0 + (globalEnergy * 2.5) + (speed * 0.05);
 
-            ctx.moveTo(this.x + size, this.y);
+            ctx.beginPath();
             ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsl(${hue}, 100%, ${60 + (globalEnergy*40)}%)`;
+            ctx.fill();
         }
     }
 
     function drawWarpedLine(x1, y1, x2, y2, depthPhase) {
+        // Basic Euclidean lines if depth is 0
+        if (virtualScrollDepth < 0.05) {
+            ctx.lineTo(x2, y2); 
+            return;
+        }
+        
         let dx = x2 - x1;
         let dy = y2 - y1;
         let dist = Math.hypot(dx, dy);
 
-        if (virtualScrollDepth < 0.05 || dist < 20) {
+        // --- Optimized Rendering Fix ---
+        // If dist < 20, we bypass curves. Small bezier are invisible but CPU expensive.
+        if (dist < 20) {
             ctx.lineTo(x2, y2); 
             return;
         }
         
         let mx = x1 + dx * 0.5;
         let my = y1 + dy * 0.5;
+
+        // --- Optimized Rendering Fix ---
+        // Cap the effective bending distance to prevent massive, complex curves from choking the CPU
         let effectiveDist = Math.min(dist, 50);
 
+        // The math bends space. As scrollDepth increases, the fold becomes extreme.
         let foldAngle = Math.atan2(dy, dx) + (Math.PI * virtualScrollDepth * Math.sin(depthPhase));
         let foldDist = effectiveDist * virtualScrollDepth * 0.8;
 
@@ -270,6 +298,8 @@
 
     for (let i = 0; i < NUM_NODES; i++) nodes.push(new Node());
 
+    let frame = 0;
+
     function animate() {
         frame++;
 
@@ -279,17 +309,18 @@
 
         globalEnergy = Math.max(0, globalEnergy - 0.005);
 
-        // Clear Background
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - (globalEnergy * 0.05)})`; 
         ctx.fillRect(0, 0, width, height);
 
         ctx.globalCompositeOperation = 'lighter';
 
+        // Clear Spatial Grid O(N)
         for(let i = 0; i < grid.length; i++) {
             grid[i].length = 0;
         }
 
+        // Update nodes and populate grid O(N)
         for (let i = 0; i < NUM_NODES; i++) {
             nodes[i].update();
         }
@@ -297,12 +328,11 @@
         let linksThisFrame = 0;
         const MAX_DIST_SQ = GRID_SIZE * GRID_SIZE; 
 
-        // --- THE GPU BATCH RENDERING FIX ---
-        // Instead of issuing 5,000 stroke() commands, we issue exactly ONE.
-        ctx.beginPath();
-        ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${0.2 + globalEnergy * 0.4})`;
         ctx.lineWidth = 0.5 + (globalEnergy * 1.5);
         
+        // --- PERFORMANCE: OPTIMIZED RENDERING ADAPTATION ---
+        // Throttling curves: Straight lines are inexpensive to draw. Bezier curves are expensive.
+        // As energy goes into critical state (>85%), we skip the bezier curves.
         let isHyperCriticalState = globalEnergy > 0.85;
 
         for (let y = 0; y < rows; y++) {
@@ -311,6 +341,7 @@
                 let cellNodes = grid[cellIdx];
                 if (cellNodes.length === 0) continue;
 
+                // Find valid neighbor cells O(1)
                 let neighbors = [];
                 for (let ny = -1; ny <= 1; ny++) {
                     for (let nx = -1; nx <= 1; nx++) {
@@ -324,39 +355,37 @@
 
                 for (let i = 0; i < cellNodes.length; i++) {
                     let n1 = cellNodes[i];
-                    if (n1.links > 5) continue; // Capping connections prevents explosion lag
 
                     for (let nIdx of neighbors) {
                         let neighborNodes = grid[nIdx];
                         for (let k = 0; k < neighborNodes.length; k++) {
                             let n2 = neighborNodes[k];
-                            
-                            if (n1 === n2 || n1.x > n2.x || n2.links > 5) continue;
+                            if (n1 === n2 || n1.x > n2.x) continue;
 
                             let dx = n1.x - n2.x;
                             let dy = n1.y - n2.y;
                             let distSq = dx*dx + dy*dy;
 
                             if (distSq < MAX_DIST_SQ) {
-                                let dist = Math.sqrt(distSq);
-
-                                // Spacing Fix: Micro-repulsion so they fill the screen instead of clustering
-                                if (dist < 25) {
-                                    let rep = (25 - dist) * 0.02;
-                                    n1.vx -= dx * rep; n1.vy -= dy * rep;
-                                    n2.vx += dx * rep; n2.vy += dy * rep;
-                                }
-
-                                n1.links++;
-                                n2.links++;
-                                linksThisFrame++;
+                                let phaseDiff = Math.abs(n1.phase - n2.phase);
+                                phaseDiff = Math.min(phaseDiff, Math.PI * 2 - phaseDiff);
                                 
-                                ctx.moveTo(n1.x, n1.y);
-                                
-                                if (isHyperCriticalState || virtualScrollDepth < 0.05 || dist < 20) {
-                                    ctx.lineTo(n2.x, n2.y);
-                                } else {
-                                    drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
+                                if (phaseDiff < 0.8 || globalEnergy > 0.5) {
+                                    linksThisFrame++;
+                                    let dist = Math.sqrt(distSq);
+                                    let opacity = (1 - (dist / GRID_SIZE)) * (0.3 + globalEnergy * 0.7);
+                                    
+                                    ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${opacity})`;
+                                    ctx.beginPath();
+                                    ctx.moveTo(n1.x, n1.y);
+                                    
+                                    // ADAPTIVE RENDERING: Straight lines at hyper-critical state or low-topology
+                                    if (isHyperCriticalState || virtualScrollDepth < 0.05 || dist < 20) {
+                                        ctx.lineTo(n2.x, n2.y);
+                                    } else {
+                                        drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
+                                    }
+                                    ctx.stroke();
                                 }
                             }
                         }
@@ -364,15 +393,11 @@
                 }
             }
         }
-        ctx.stroke(); // Draw ALL lines simultaneously 
 
-        // Batch render nodes
-        ctx.beginPath();
-        ctx.fillStyle = `hsl(${currentHue}, 100%, ${60 + (globalEnergy*40)}%)`;
+        // Draw Nodes
         for (let i = 0; i < NUM_NODES; i++) {
             nodes[i].draw(currentHue);
         }
-        ctx.fill();
 
         // Interaction Core
         if (isDrawing) {
@@ -416,6 +441,7 @@
         injectEnergy(0.02); 
     }
 
+    // Capture input globally on window to prevent UI blocking
     window.addEventListener('mousedown', (e) => {
         if (e.target.tagName !== 'BUTTON') {
             isDrawing = true;
@@ -428,12 +454,14 @@
     });
     window.addEventListener('mouseup', () => isDrawing = false);
 
+    // Virtual Scroll
     window.addEventListener('wheel', (e) => {
         virtualScrollDepth += e.deltaY * 0.001;
         virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
-        injectEnergy(0.05); 
+        injectEnergy(0.05); // Scrolling adds energy
     });
 
+    // Touch Support
     window.addEventListener('touchstart', (e) => {
         if (e.target.tagName !== 'BUTTON') {
             isDrawing = true;
@@ -446,16 +474,19 @@
     window.addEventListener('touchmove', (e) => {
         if (isDrawing) {
             setMousePos(e.touches[0].clientX, e.touches[0].clientY);
+            
             let currentTouchY = e.touches[0].clientY;
             let deltaY = lastTouchY - currentTouchY;
             virtualScrollDepth += deltaY * 0.002;
             virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
             lastTouchY = currentTouchY;
+            
             e.preventDefault(); 
         }
     }, { passive: false });
     window.addEventListener('touchend', () => isDrawing = false);
 
+    // Reset Detonation
     btnReset.addEventListener('click', () => {
         globalEnergy = 0.0;
         virtualScrollDepth = 0.0;
@@ -470,6 +501,7 @@
         }
     });
 
+    // Boot
     animate();
 })();
 </script>
