@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Fluid Quantum Substrate [Apex Optimized]</title>
+    <title>The Ethereal Loom</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #000;
-            color: #e5e5e5;
+            color: #fff;
             overflow: hidden; 
             margin: 0;
             padding: 0;
@@ -22,138 +22,98 @@
             position: absolute;
             top: 0; left: 0;
             z-index: 1;
-            /* Heavy cinematic bloom effect, now optimized for 800 nodes */
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25)) contrast(1.2) brightness(1.2);
+            /* Cinematic glow that won't blow out the colors */
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15)) contrast(1.2);
         }
         #ui-layer {
             position: absolute;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             z-index: 10;
-            pointer-events: none; /* Let all clicks pass through to canvas */
+            pointer-events: none; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 1.5rem;
         }
         .glass-panel {
-            background: rgba(5, 5, 10, 0.5);
+            background: rgba(5, 5, 12, 0.4);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            pointer-events: auto; /* Re-enable clicks for UI elements */
-            transition: all 0.3s ease;
-        }
-        .interactive-btn {
-            pointer-events: auto;
-            cursor: pointer;
-        }
-        .interactive-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.02);
-            box-shadow: 0 0 20px currentColor;
         }
         .hud-value {
             font-family: 'Inter', sans-serif;
             font-weight: 700;
-            text-shadow: 0 0 15px currentColor;
-        }
-        #scroll-track {
-            width: 4px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            position: relative;
-            overflow: hidden;
-        }
-        #scroll-thumb {
-            width: 100%;
-            background: currentColor;
-            position: absolute;
-            top: 0;
-            border-radius: 2px;
-            transition: top 0.1s ease, height 0.1s ease;
+            text-shadow: 0 0 10px currentColor;
         }
     </style>
 </head>
 <body>
-    <canvas id="substrateCanvas"></canvas>
+    <canvas id="loomCanvas"></canvas>
 
     <div id="ui-layer">
         <header class="flex justify-between items-start gap-4">
-            <div class="glass-panel p-5 max-w-sm shadow-2xl transition-colors duration-300" id="hud-primary">
-                <h1 class="font-bold text-lg tracking-widest uppercase mb-1">Hyper-Fluid Substrate</h1>
+            <div class="glass-panel p-5 max-w-sm shadow-2xl">
+                <h1 class="text-white font-bold text-lg tracking-widest uppercase mb-1">The Ethereal Loom</h1>
                 <p class="text-xs text-gray-400 leading-relaxed">
-                    Scroll/Swipe to warp topology. Drag to inject thermal energy and shift the wavelength.
+                    A continuous 3D Inverse Kinematics mesh. Strands orbit a dynamic focal point using trailing spring physics, guaranteeing infinite, non-collapsing motion.
                 </p>
-                <div class="mt-4 flex items-center gap-3">
-                    <div id="scroll-track">
-                        <div id="scroll-thumb" style="height: 10%;"></div>
-                    </div>
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest">
-                        Z-Depth Topology<br>
-                        <span id="stat-depth" class="text-sm hud-value">0.00</span>
-                    </div>
+                <div class="mt-4 border-l-2 border-fuchsia-500 bg-fuchsia-500/10 p-2 text-xs text-fuchsia-200">
+                    <span class="font-bold uppercase tracking-widest">Interaction:</span><br>
+                    Guide the entity with your cursor. <strong>Click & Hold</strong> to increase Torsion and shatter the helix.
                 </div>
             </div>
 
-            <div class="glass-panel p-5 min-w-[220px] shadow-2xl text-right transition-colors duration-300" id="hud-secondary">
-                <h2 class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-800 pb-1">Quantum State</h2>
+            <div class="glass-panel p-5 min-w-[200px] shadow-2xl text-right">
+                <h2 class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Mesh Telemetry</h2>
                 <div class="flex justify-between mb-1 items-end">
-                    <span class="text-xs text-gray-400">Wavelength</span>
-                    <span id="stat-wave" class="text-sm hud-value">450 nm</span>
+                    <span class="text-xs text-gray-400">Strand Expansion</span>
+                    <span id="stat-radius" class="text-sm hud-value text-cyan-400">0.0</span>
                 </div>
                 <div class="flex justify-between mb-1 items-end">
-                    <span class="text-xs text-gray-400">Energy Level</span>
-                    <span id="stat-energy" class="text-sm hud-value">0.0%</span>
+                    <span class="text-xs text-gray-400">3D Pitch Angle</span>
+                    <span id="stat-pitch" class="text-sm hud-value text-fuchsia-400">0.0°</span>
                 </div>
                 <div class="flex justify-between mt-3 items-end">
-                    <span class="text-[10px] uppercase tracking-widest">Active Links</span>
-                    <span id="stat-links" class="text-lg hud-value">0</span>
+                    <span class="text-[10px] uppercase tracking-widest text-gray-500">Live Segments</span>
+                    <span class="text-lg hud-value text-white">1,120</span>
                 </div>
             </div>
         </header>
-
-        <footer class="flex justify-center pb-4">
-            <button id="btn-reset" class="glass-panel interactive-btn px-8 py-3 text-xs uppercase tracking-widest font-bold transition-colors duration-300">
-                Detonate & Reset Substrate
-            </button>
-        </footer>
     </div>
 
 <script>
 (() => {
-    const canvas = document.getElementById('substrateCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false }); // forcing opaque black background allows browser GPU to optimize
+    const canvas = document.getElementById('loomCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false }); // Opaque context for locked 60/120 FPS
 
-    // UI Elements
-    const statDepth = document.getElementById('stat-depth');
-    const statWave = document.getElementById('stat-wave');
-    const statEnergy = document.getElementById('stat-energy');
-    const statLinks = document.getElementById('stat-links');
-    const scrollThumb = document.getElementById('scroll-thumb');
-    const hudPrimary = document.getElementById('hud-primary');
-    const hudSecondary = document.getElementById('hud-secondary');
-    const btnReset = document.getElementById('btn-reset');
+    const statRadius = document.getElementById('stat-radius');
+    const statPitch = document.getElementById('stat-pitch');
 
     let width, height;
-    let nodes = [];
-    const NUM_NODES = 800; // Pushed to 800 as requested previously
     
-    // Global Physics States
-    let globalEnergy = 0.0; // 0.0 (Cold/Cyan) to 1.0 (Hot/Red)
-    let virtualScrollDepth = 0.0; // 0.0 (Euclidean) to 1.0 (Hyperbolic Fractal)
+    // --- MESH CONFIGURATION ---
+    const NUM_STRANDS = 16;   // Number of glowing trails
+    const NUM_SEGMENTS = 70;  // Length of each tail
     
-    // Interaction Tracking
-    let isDrawing = false;
-    let mouseX = -1000, mouseY = -1000;
-    let lastTouchY = 0;
+    // Creates an array of 16 strands, each containing 70 segment points
+    let strands = Array.from({ length: NUM_STRANDS }, () => 
+        Array.from({ length: NUM_SEGMENTS }, () => ({ x: 0, y: 0 }))
+    );
 
-    // --- Spatial Grid for Lag-Free Performance (O(N^2) Solution) ---
-    const GRID_SIZE = 80; // Each cell is the size of the max connection distance
-    let cols, rows;
-    let grid = [];
+    let isDrawing = false;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let headX = targetX;
+    let headY = targetY;
+    
+    // Animation/Math State
+    let time = 0;
+    let baseAngle = 0;
+    let globalHue = 0;
+    let idleTimer = 0;
 
     function resize() {
         width = window.innerWidth;
@@ -161,345 +121,166 @@
         canvas.width = width;
         canvas.height = height;
         
-        cols = Math.ceil(width / GRID_SIZE);
-        rows = Math.ceil(height / GRID_SIZE);
-        grid = new Array(cols * rows);
-        for(let i = 0; i < grid.length; i++) {
-            grid[i] = [];
+        // Snap everything to center on resize
+        targetX = width / 2;
+        targetY = height / 2;
+        for(let k = 0; k < NUM_STRANDS; k++) {
+            for(let j = 0; j < NUM_SEGMENTS; j++) {
+                strands[k][j].x = targetX;
+                strands[k][j].y = targetY;
+            }
         }
     }
     window.addEventListener('resize', resize);
     resize();
 
-    class Node {
-        constructor() {
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            // Stagger initial velocities for smoother start
-            this.vx = (Math.random() - 0.5) * 4; 
-            this.vy = (Math.random() - 0.5) * 4;
-            this.basePhase = Math.random() * Math.PI * 2;
-        }
-
-        update() {
-            // Accelerate based on injected energy
-            let energyMultiplier = 1.0 + (globalEnergy * 3.0);
-
-            if (isDrawing) {
-                // --- APEX PHYSICS UPGRADE: THE ANTI-GRAVITY FIX ---
-                let dx = mouseX - this.x;
-                let dy = mouseY - this.y;
-                let dist = Math.hypot(dx, dy);
-                
-                if (dist < 400) {
-                    // Capped linear distance prevents division by zero and extreme force
-                    let linearDist = Math.max(15, dist);
-                    
-                    // FLIP FORCE: Attraction turns to Repulsion at close range (<30px)
-                    let attractiveForce = 2500 / (linearDist * linearDist + 50); 
-                    let repulsiveForce = dist < 30 ? (30 - dist) * 0.1 : 0; // Separation force
-                    
-                    let effectiveForce = attractiveForce - repulsiveForce;
-                    
-                    this.vx += (dx / dist) * effectiveForce;
-                    this.vy += (dy / dist) * effectiveForce;
-                    
-                    // Damping the swirl to prevent clumping while orbiting
-                    let swirl = attractiveForce * (1.0 + virtualScrollDepth * 2) * 0.7; // dampened swirl
-                    this.vx += (dy / dist) * swirl;
-                    this.vy -= (dx / dist) * swirl;
-                }
-            } else {
-                // --- SPEED UPGRADE: More Energetic Brownian Drift ---
-                let baseDriftSpeed = 0.3 * energyMultiplier; // up from 0.1
-                this.vx += (Math.random() - 0.5) * baseDriftSpeed;
-                this.vy += (Math.random() - 0.5) * baseDriftSpeed;
-                
-                // Drift gently to center to maintain coherence
-                this.vx += (width / 2 - this.x) * 0.00005;
-                this.vy += (height / 2 - this.y) * 0.00005;
-            }
-
-            // --- SPEED UPGRADE: Reduced friction at high energy ---
-            let friction = 0.95 + (globalEnergy * 0.03); 
-            this.vx *= friction;
-            this.vy *= friction;
-
-            // --- SPEED UPGRADE: Cap overall velocity (raised from 15) ---
-            const speed = Math.hypot(this.vx, this.vy);
-            const MAX_PHYSICS_SPEED = 20 + globalEnergy * 15; // Raised speed cap
-            if (speed > MAX_PHYSICS_SPEED) {
-                this.vx = (this.vx / speed) * MAX_PHYSICS_SPEED;
-                this.vy = (this.vy / speed) * MAX_PHYSICS_SPEED;
-            }
-
-            this.x += this.vx;
-            this.y += this.vy;
-
-            // Screen Wrap
-            if (this.x < 0) this.x += width;
-            if (this.x > width) this.x -= width;
-            if (this.y < 0) this.y += height;
-            if (this.y > height) this.y -= height;
-            
-            // Populate grid cell bitwise math (faster than floor)
-            let cx = ~~ (this.x / GRID_SIZE);
-            let cy = ~~ (this.y / GRID_SIZE);
-            if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
-                grid[cy * cols + cx].push(this);
-            }
-        }
-
-        draw(hue) {
-            let speed = Math.hypot(this.vx, this.vy);
-            let size = 1.0 + (globalEnergy * 2.5) + (speed * 0.05);
-
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
-            ctx.fillStyle = `hsl(${hue}, 100%, ${60 + (globalEnergy*40)}%)`;
-            ctx.fill();
-        }
-    }
-
-    function drawWarpedLine(x1, y1, x2, y2, depthPhase) {
-        // Basic Euclidean lines if depth is 0
-        if (virtualScrollDepth < 0.05) {
-            ctx.lineTo(x2, y2); 
-            return;
-        }
-        
-        let dx = x2 - x1;
-        let dy = y2 - y1;
-        let dist = Math.hypot(dx, dy);
-
-        // --- Optimized Rendering Fix ---
-        // If dist < 20, we bypass curves. Small bezier are invisible but CPU expensive.
-        if (dist < 20) {
-            ctx.lineTo(x2, y2); 
-            return;
-        }
-        
-        let mx = x1 + dx * 0.5;
-        let my = y1 + dy * 0.5;
-
-        // --- Optimized Rendering Fix ---
-        // Cap the effective bending distance to prevent massive, complex curves from choking the CPU
-        let effectiveDist = Math.min(dist, 50);
-
-        // The math bends space. As scrollDepth increases, the fold becomes extreme.
-        let foldAngle = Math.atan2(dy, dx) + (Math.PI * virtualScrollDepth * Math.sin(depthPhase));
-        let foldDist = effectiveDist * virtualScrollDepth * 0.8;
-
-        let fx = mx + Math.cos(foldAngle) * foldDist;
-        let fy = my + Math.sin(foldAngle) * foldDist;
-
-        ctx.bezierCurveTo(mx, my, fx, fy, x2, y2);
-    }
-
-    for (let i = 0; i < NUM_NODES; i++) nodes.push(new Node());
-
-    let frame = 0;
-
     function animate() {
-        frame++;
+        time += 0.015;
+        idleTimer++;
 
-        let currentHue = 180 + (globalEnergy * 160);
-        let currentColor = `hsl(${currentHue}, 100%, 60%)`;
-        let uiColor = `hsla(${currentHue}, 100%, 60%, 0.3)`;
+        // If the user hasn't touched the mouse in 2 seconds, let the entity wander organically
+        if (idleTimer > 120) {
+            targetX = (width / 2) + Math.sin(time * 0.5) * (width * 0.3) * Math.cos(time * 0.3);
+            targetY = (height / 2) + Math.cos(time * 0.4) * (height * 0.3) * Math.sin(time * 0.2);
+        }
 
-        globalEnergy = Math.max(0, globalEnergy - 0.005);
+        // 1. Smoothly glide the "Head" of the entity toward the target
+        let dx = targetX - headX;
+        let dy = targetY - headY;
+        let speed = Math.hypot(dx, dy);
+        headX += dx * 0.08;
+        headY += dy * 0.08;
 
+        // 2. Calculate Mesh Dynamics
+        // Clicking expands the radius massively. Moving fast also slightly expands it.
+        let targetRadius = isDrawing ? Math.min(width, height) * 0.4 : 40 + (speed * 0.5);
+        let currentRadius = window.currentRadius || 40;
+        window.currentRadius = currentRadius + (targetRadius - currentRadius) * 0.1;
+
+        // Clicking speeds up the spinning
+        let rotationSpeed = isDrawing ? 0.08 : 0.02 + (speed * 0.0005);
+        baseAngle += rotationSpeed;
+        
+        // Shift colors continuously
+        globalHue = (globalHue + 0.5) % 360;
+
+        // 3D Pitch simulation (makes the orbit look like it's tilting in 3D space)
+        let pitch = Math.sin(time * 0.8);
+
+        // 3. Inverse Kinematics Logic (The Spring Tails)
+        for (let k = 0; k < NUM_STRANDS; k++) {
+            // Distribute the strands evenly in a circle
+            let offsetAngle = (k / NUM_STRANDS) * Math.PI * 2;
+            let phase = baseAngle + offsetAngle;
+
+            // Update the Head (Segment 0) of this specific strand using 3D projected math
+            strands[k][0].x = headX + Math.cos(phase) * window.currentRadius;
+            // The 'pitch' variable squishes the Y axis, creating a flawless 3D tilt illusion
+            strands[k][0].y = headY + Math.sin(phase) * window.currentRadius * pitch;
+
+            // The rest of the segments smoothly trail behind their parent segment
+            for (let j = 1; j < NUM_SEGMENTS; j++) {
+                // The delay creates the beautiful, fluid, snake-like sweeping motion
+                let drag = 0.35; // Lower is looser/longer, Higher is stiffer/tighter
+                strands[k][j].x += (strands[k][j-1].x - strands[k][j].x) * drag;
+                strands[k][j].y += (strands[k][j-1].y - strands[k][j].y) * drag;
+            }
+        }
+
+        // --- RENDERING ---
+
+        // Clear the screen with a fade. 
+        // We use a dark background so the colors NEVER blow out to white.
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - (globalEnergy * 0.05)})`; 
+        ctx.fillStyle = 'rgba(2, 4, 8, 0.2)'; 
         ctx.fillRect(0, 0, width, height);
 
-        ctx.globalCompositeOperation = 'lighter';
+        // Screen blending makes the overlapping neon colors intensely vibrant
+        ctx.globalCompositeOperation = 'screen';
 
-        // Clear Spatial Grid O(N)
-        for(let i = 0; i < grid.length; i++) {
-            grid[i].length = 0;
-        }
-
-        // Update nodes and populate grid O(N)
-        for (let i = 0; i < NUM_NODES; i++) {
-            nodes[i].update();
-        }
-
-        let linksThisFrame = 0;
-        const MAX_DIST_SQ = GRID_SIZE * GRID_SIZE; 
-
-        ctx.lineWidth = 0.5 + (globalEnergy * 1.5);
-        
-        // --- PERFORMANCE: OPTIMIZED RENDERING ADAPTATION ---
-        // Throttling curves: Straight lines are inexpensive to draw. Bezier curves are expensive.
-        // As energy goes into critical state (>85%), we skip the bezier curves.
-        let isHyperCriticalState = globalEnergy > 0.85;
-
-        for (let y = 0; y < rows; y++) {
-            for (let x = 0; x < cols; x++) {
-                let cellIdx = y * cols + x;
-                let cellNodes = grid[cellIdx];
-                if (cellNodes.length === 0) continue;
-
-                // Find valid neighbor cells O(1)
-                let neighbors = [];
-                for (let ny = -1; ny <= 1; ny++) {
-                    for (let nx = -1; nx <= 1; nx++) {
-                        let nc = x + nx;
-                        let nr = y + ny;
-                        if (nc >= 0 && nc < cols && nr >= 0 && nr < rows) {
-                            neighbors.push(nr * cols + nc);
-                        }
-                    }
-                }
-
-                for (let i = 0; i < cellNodes.length; i++) {
-                    let n1 = cellNodes[i];
-
-                    for (let nIdx of neighbors) {
-                        let neighborNodes = grid[nIdx];
-                        for (let k = 0; k < neighborNodes.length; k++) {
-                            let n2 = neighborNodes[k];
-                            if (n1 === n2 || n1.x > n2.x) continue;
-
-                            let dx = n1.x - n2.x;
-                            let dy = n1.y - n2.y;
-                            let distSq = dx*dx + dy*dy;
-
-                            if (distSq < MAX_DIST_SQ) {
-                                let phaseDiff = Math.abs(n1.phase - n2.phase);
-                                phaseDiff = Math.min(phaseDiff, Math.PI * 2 - phaseDiff);
-                                
-                                if (phaseDiff < 0.8 || globalEnergy > 0.5) {
-                                    linksThisFrame++;
-                                    let dist = Math.sqrt(distSq);
-                                    let opacity = (1 - (dist / GRID_SIZE)) * (0.3 + globalEnergy * 0.7);
-                                    
-                                    ctx.strokeStyle = `hsla(${currentHue}, 100%, ${50 + globalEnergy*30}%, ${opacity})`;
-                                    ctx.beginPath();
-                                    ctx.moveTo(n1.x, n1.y);
-                                    
-                                    // ADAPTIVE RENDERING: Straight lines at hyper-critical state or low-topology
-                                    if (isHyperCriticalState || virtualScrollDepth < 0.05 || dist < 20) {
-                                        ctx.lineTo(n2.x, n2.y);
-                                    } else {
-                                        drawWarpedLine(n1.x, n1.y, n2.x, n2.y, n1.basePhase + frame * 0.05);
-                                    }
-                                    ctx.stroke();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Draw Nodes
-        for (let i = 0; i < NUM_NODES; i++) {
-            nodes[i].draw(currentHue);
-        }
-
-        // Interaction Core
-        if (isDrawing) {
+        // A. Draw the cross-section "Ribs" to give it a 3D cylindrical mesh look
+        // We only draw every 5th segment to keep it looking clean and geometric
+        for (let j = 0; j < NUM_SEGMENTS; j += 6) {
             ctx.beginPath();
-            ctx.arc(mouseX, mouseY, 15 + (globalEnergy * 20), 0, Math.PI * 2);
-            ctx.fillStyle = "#FFF";
-            ctx.shadowBlur = 50;
-            ctx.shadowColor = currentColor;
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            for (let k = 0; k < NUM_STRANDS; k++) {
+                ctx.lineTo(strands[k][j].x, strands[k][j].y);
+            }
+            ctx.closePath();
+            
+            // Ribs fade out towards the tail
+            let opacity = 0.15 * (1 - (j / NUM_SEGMENTS));
+            ctx.strokeStyle = `hsla(${globalHue}, 100%, 70%, ${opacity})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
         }
 
-        // Update UI
-        if (frame % 3 === 0) {
-            statEnergy.innerText = (globalEnergy * 100).toFixed(1) + "%";
-            statWave.innerText = Math.floor(450 + (globalEnergy * 250)) + " nm";
-            statDepth.innerText = virtualScrollDepth.toFixed(2);
-            statLinks.innerText = linksThisFrame.toLocaleString();
-            
-            scrollThumb.style.height = Math.max(5, virtualScrollDepth * 100) + "%";
-            scrollThumb.style.top = (virtualScrollDepth * (100 - parseFloat(scrollThumb.style.height))) + "%";
+        // B. Draw the glowing longitudinal strands (The light trails)
+        for (let k = 0; k < NUM_STRANDS; k++) {
+            ctx.beginPath();
+            ctx.moveTo(strands[k][0].x, strands[k][0].y);
+            for (let j = 1; j < NUM_SEGMENTS; j++) {
+                ctx.lineTo(strands[k][j].x, strands[k][j].y);
+            }
 
-            document.documentElement.style.color = currentColor;
-            hudPrimary.style.borderColor = uiColor;
-            hudSecondary.style.borderColor = uiColor;
-            btnReset.style.borderColor = uiColor;
-            btnReset.style.color = currentColor;
-            scrollThumb.style.backgroundColor = currentColor;
+            // Each strand gets a slightly different hue for a gorgeous rainbow spectrum effect
+            let strandHue = globalHue + (k / NUM_STRANDS) * 120; 
+            
+            ctx.strokeStyle = `hsla(${strandHue}, 100%, 65%, 0.8)`;
+            
+            // Thick at the head, tapering down to a razor-thin point at the tail
+            ctx.lineWidth = 3; 
+            ctx.stroke();
+            
+            // Add a bright core to the head of the strand
+            ctx.beginPath();
+            ctx.arc(strands[k][0].x, strands[k][0].y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFF';
+            ctx.fill();
+        }
+
+        // Update UI Telemetry
+        if (time % 0.15 < 0.02) { // Throttle DOM updates
+            statRadius.innerText = Math.floor(window.currentRadius) + "px";
+            // Convert the Math.sin pitch to a readable degree format
+            statPitch.innerText = Math.abs(Math.floor(pitch * 90)) + "°";
         }
 
         requestAnimationFrame(animate);
     }
 
-    function injectEnergy(amount) {
-        globalEnergy = Math.min(1.0, globalEnergy + amount);
-    }
+    // --- INTERACTION ---
 
-    function setMousePos(x, y) {
-        mouseX = x;
-        mouseY = y;
-        injectEnergy(0.02); 
-    }
-
-    // Capture input globally on window to prevent UI blocking
-    window.addEventListener('mousedown', (e) => {
-        if (e.target.tagName !== 'BUTTON') {
-            isDrawing = true;
-            setMousePos(e.clientX, e.clientY);
-            injectEnergy(0.1);
+    function setMousePos(e) {
+        if (e.touches && e.touches.length > 0) {
+            targetX = e.touches[0].clientX;
+            targetY = e.touches[0].clientY;
+        } else {
+            targetX = e.clientX;
+            targetY = e.clientY;
         }
+        idleTimer = 0; // Stop the automatic wandering
+    }
+
+    // Desktop
+    window.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        setMousePos(e);
     });
     window.addEventListener('mousemove', (e) => {
-        if (isDrawing) setMousePos(e.clientX, e.clientY);
+        setMousePos(e);
     });
-    window.addEventListener('mouseup', () => isDrawing = false);
+    window.addEventListener('mouseup', () => { isDrawing = false; });
 
-    // Virtual Scroll
-    window.addEventListener('wheel', (e) => {
-        virtualScrollDepth += e.deltaY * 0.001;
-        virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
-        injectEnergy(0.05); // Scrolling adds energy
-    });
-
-    // Touch Support
+    // Mobile
     window.addEventListener('touchstart', (e) => {
-        if (e.target.tagName !== 'BUTTON') {
-            isDrawing = true;
-            lastTouchY = e.touches[0].clientY;
-            setMousePos(e.touches[0].clientX, e.touches[0].clientY);
-            injectEnergy(0.1);
-        }
+        isDrawing = true;
+        setMousePos(e);
     }, { passive: false });
-    
     window.addEventListener('touchmove', (e) => {
-        if (isDrawing) {
-            setMousePos(e.touches[0].clientX, e.touches[0].clientY);
-            
-            let currentTouchY = e.touches[0].clientY;
-            let deltaY = lastTouchY - currentTouchY;
-            virtualScrollDepth += deltaY * 0.002;
-            virtualScrollDepth = Math.max(0, Math.min(1.0, virtualScrollDepth));
-            lastTouchY = currentTouchY;
-            
-            e.preventDefault(); 
-        }
+        setMousePos(e);
+        e.preventDefault(); // Prevents screen scrolling while dragging
     }, { passive: false });
-    window.addEventListener('touchend', () => isDrawing = false);
-
-    // Reset Detonation
-    btnReset.addEventListener('click', () => {
-        globalEnergy = 0.0;
-        virtualScrollDepth = 0.0;
-        
-        for (let n of nodes) {
-            let dx = width/2 - n.x;
-            let dy = height/2 - n.y;
-            let dist = Math.hypot(dx, dy);
-            let force = -2000 / (dist + 10); 
-            n.vx += (dx / dist) * force;
-            n.vy += (dy / dist) * force;
-        }
-    });
+    window.addEventListener('touchend', () => { isDrawing = false; });
 
     // Boot
     animate();
