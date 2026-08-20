@@ -3,82 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Ethereal Loom</title>
+    <title>The Ultimate Oracle</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            overflow: hidden; 
-            margin: 0;
-            padding: 0;
-            font-family: 'Space Mono', monospace;
-            touch-action: none; 
-            user-select: none;
-        }
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 1;
-            /* Cinematic glow that won't blow out the colors */
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15)) contrast(1.2);
-        }
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 10;
-            pointer-events: none; 
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 1.5rem;
-        }
-        .glass-panel {
-            background: rgba(5, 5, 12, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
-        .hud-value {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            text-shadow: 0 0 10px currentColor;
-        }
+        body { background-color: #000; color: #e5e5e5; overflow: hidden; margin: 0; padding: 0; font-family: 'Space Mono', monospace; user-select: none; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.2)) contrast(1.2) brightness(1.25); }
+        
+        #init-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 50; display: flex; justify-content: center; align-items: center; background: #000; cursor: pointer; transition: opacity 1.5s ease; }
+        #init-overlay h1 { font-family: 'Space Mono', sans-serif; font-size: 1.2rem; letter-spacing: 12px; text-transform: uppercase; color: #0ff; text-shadow: 0 0 25px rgba(0,255,255,0.8); }
+
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; transition: opacity 1s ease; }
+        .glass-panel { background: rgba(3, 5, 8, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .hud-value { font-weight: 700; text-shadow: 0 0 10px currentColor; }
     </style>
 </head>
 <body>
-    <canvas id="loomCanvas"></canvas>
 
-    <div id="ui-layer">
+    <div id="init-overlay"><h1>[ Awaken The Oracle ]</h1></div>
+    <canvas id="engineCanvas"></canvas>
+
+    <div id="ui-layer" style="opacity: 0;">
         <header class="flex justify-between items-start gap-4">
-            <div class="glass-panel p-5 max-w-sm shadow-2xl">
-                <h1 class="text-white font-bold text-lg tracking-widest uppercase mb-1">The Ethereal Loom</h1>
-                <p class="text-xs text-gray-400 leading-relaxed">
-                    A continuous 3D Inverse Kinematics mesh. Strands orbit a dynamic focal point using trailing spring physics, guaranteeing infinite, non-collapsing motion.
+            <div class="glass-panel p-5 max-w-md">
+                <h1 class="text-cyan-400 font-bold text-xl tracking-widest uppercase mb-1">Volumetric Singularity</h1>
+                <p class="text-xs text-gray-400 leading-relaxed mb-3">
+                    10,000-Node System. Primary agents execute Z² fractal mapping. Secondary agents project 3D Ophanim halos and magnetic containment streams. Move cursor to engage Parallax telemetry.
                 </p>
-                <div class="mt-4 border-l-2 border-fuchsia-500 bg-fuchsia-500/10 p-2 text-xs text-fuchsia-200">
-                    <span class="font-bold uppercase tracking-widest">Interaction:</span><br>
-                    Guide the entity with your cursor. <strong>Click & Hold</strong> to increase Torsion and shatter the helix.
+                <div class="border-l-2 border-fuchsia-500 bg-fuchsia-500/10 p-2 text-xs text-fuchsia-100 uppercase tracking-widest font-bold">
+                    Lexicon: <span id="hud-word" class="text-white ml-2">AWAITING CYCLE...</span>
                 </div>
             </div>
 
-            <div class="glass-panel p-5 min-w-[200px] shadow-2xl text-right">
-                <h2 class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Mesh Telemetry</h2>
+            <div class="glass-panel p-5 min-w-[240px] text-right">
+                <h2 class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-800 pb-1">Holographic Telemetry</h2>
                 <div class="flex justify-between mb-1 items-end">
-                    <span class="text-xs text-gray-400">Strand Expansion</span>
-                    <span id="stat-radius" class="text-sm hud-value text-cyan-400">0.0</span>
+                    <span class="text-xs text-gray-400">Core State</span>
+                    <span id="stat-state" class="text-sm hud-value text-cyan-400">IDLE</span>
                 </div>
                 <div class="flex justify-between mb-1 items-end">
-                    <span class="text-xs text-gray-400">3D Pitch Angle</span>
-                    <span id="stat-pitch" class="text-sm hud-value text-fuchsia-400">0.0°</span>
+                    <span class="text-xs text-gray-400">Active Threads</span>
+                    <span id="stat-links" class="text-sm hud-value text-emerald-400">0</span>
                 </div>
                 <div class="flex justify-between mt-3 items-end">
-                    <span class="text-[10px] uppercase tracking-widest text-gray-500">Live Segments</span>
-                    <span class="text-lg hud-value text-white">1,120</span>
+                    <span class="text-[10px] text-fuchsia-400 uppercase tracking-widest">3D Sub-Routines</span>
+                    <span class="text-sm hud-value text-fuchsia-300">ACTIVE</span>
                 </div>
             </div>
         </header>
@@ -86,204 +55,526 @@
 
 <script>
 (() => {
-    const canvas = document.getElementById('loomCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false }); // Opaque context for locked 60/120 FPS
+    const canvas = document.getElementById('engineCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const osCanvas = document.createElement('canvas');
+    const osCtx = osCanvas.getContext('2d', { willReadFrequently: true });
 
-    const statRadius = document.getElementById('stat-radius');
-    const statPitch = document.getElementById('stat-pitch');
+    const hudWord = document.getElementById('hud-word');
+    const statState = document.getElementById('stat-state');
+    const statLinks = document.getElementById('stat-links');
 
     let width, height;
-    
-    // --- MESH CONFIGURATION ---
-    const NUM_STRANDS = 16;   // Number of glowing trails
-    const NUM_SEGMENTS = 70;  // Length of each tail
-    
-    // Creates an array of 16 strands, each containing 70 segment points
-    let strands = Array.from({ length: NUM_STRANDS }, () => 
-        Array.from({ length: NUM_SEGMENTS }, () => ({ x: 0, y: 0 }))
-    );
+    let dpr = window.devicePixelRatio || 1; 
 
-    let isDrawing = false;
-    let targetX = window.innerWidth / 2;
-    let targetY = window.innerHeight / 2;
-    let headX = targetX;
-    let headY = targetY;
-    
-    // Animation/Math State
-    let time = 0;
-    let baseAngle = 0;
-    let globalHue = 0;
-    let idleTimer = 0;
+    // System Agents
+    let coreNodes = [];
+    let auraNodes = [];
+    const NUM_CORE = 4000;  // Sharp face/text
+    const NUM_AURA = 6000;  // 3D Holographic rings and streams
+
+    let currentWord = "";
+    let frame = 0;
+    let engineState = "IDLE"; 
+
+    // Parallax Camera Vectors
+    let camX = 0, camY = 0;
+    let targetCamX = 0, targetCamY = 0;
+
+    const GRID_SIZE = 30; 
+    let cols, rows;
+    let grid = [];
 
     function resize() {
         width = window.innerWidth;
         height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
         
-        // Snap everything to center on resize
-        targetX = width / 2;
-        targetY = height / 2;
-        for(let k = 0; k < NUM_STRANDS; k++) {
-            for(let j = 0; j < NUM_SEGMENTS; j++) {
-                strands[k][j].x = targetX;
-                strands[k][j].y = targetY;
-            }
-        }
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr); 
+
+        osCanvas.width = width;
+        osCanvas.height = height;
+
+        cols = Math.ceil(width / GRID_SIZE);
+        rows = Math.ceil(height / GRID_SIZE);
+        grid = new Array(cols * rows);
+        for(let i = 0; i < grid.length; i++) grid[i] = [];
     }
     window.addEventListener('resize', resize);
     resize();
 
-    function animate() {
-        time += 0.015;
-        idleTimer++;
-
-        // If the user hasn't touched the mouse in 2 seconds, let the entity wander organically
-        if (idleTimer > 120) {
-            targetX = (width / 2) + Math.sin(time * 0.5) * (width * 0.3) * Math.cos(time * 0.3);
-            targetY = (height / 2) + Math.cos(time * 0.4) * (height * 0.3) * Math.sin(time * 0.2);
+    // 1. CORE NODES (The Face & Text with Fractal Lattice)
+    class CoreNode {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = (Math.random() - 0.5) * 2;
+            this.tx = width / 2;
+            this.ty = height / 2;
+            this.phase = Math.random() * Math.PI * 2;
+            this.heat = 0;
+            this.isTarget = false;
         }
 
-        // 1. Smoothly glide the "Head" of the entity toward the target
-        let dx = targetX - headX;
-        let dy = targetY - headY;
-        let speed = Math.hypot(dx, dy);
-        headX += dx * 0.08;
-        headY += dy * 0.08;
+        update() {
+            if (engineState === "SINGULARITY") {
+                let dx = (width / 2) - this.x;
+                let dy = (height / 2) - this.y;
+                let dist = Math.hypot(dx, dy);
+                
+                if (dist > 5) {
+                    let force = 4000 / (dist * dist + 100); 
+                    this.vx += (dx / dist) * force;
+                    this.vy += (dy / dist) * force;
+                    this.vx += (dy / dist) * force * 1.5;
+                    this.vy -= (dx / dist) * force * 1.5;
+                }
+                this.heat = Math.min(1.0, this.heat + 0.05);
 
-        // 2. Calculate Mesh Dynamics
-        // Clicking expands the radius massively. Moving fast also slightly expands it.
-        let targetRadius = isDrawing ? Math.min(width, height) * 0.4 : 40 + (speed * 0.5);
-        let currentRadius = window.currentRadius || 40;
-        window.currentRadius = currentRadius + (targetRadius - currentRadius) * 0.1;
+            } else if (engineState === "DETONATION") {
+                let dx = this.x - (width / 2);
+                let dy = this.y - (height / 2);
+                let dist = Math.hypot(dx, dy);
+                let force = 1200 / (dist + 10);
+                this.vx += (dx / dist) * force;
+                this.vy += (dy / dist) * force;
+                this.heat = 1.0;
+                
+            } else {
+                if (this.isTarget) {
+                    let dx = this.tx - this.x;
+                    let dy = this.ty - this.y;
+                    this.vx += dx * 0.12; 
+                    this.vy += dy * 0.12;
+                    let noise = Math.sin(this.y * 0.01 + frame * 0.02) * Math.cos(this.x * 0.01);
+                    this.vx += noise * 0.2; 
+                    this.vy += noise * 0.2;
+                    this.heat = Math.min(1.0, this.heat + 0.01);
+                } else {
+                    this.vx += (Math.random() - 0.5) * 0.5;
+                    this.vy += (Math.random() - 0.5) * 0.5;
+                    this.heat = Math.max(0, this.heat - 0.02);
+                }
+            }
 
-        // Clicking speeds up the spinning
-        let rotationSpeed = isDrawing ? 0.08 : 0.02 + (speed * 0.0005);
-        baseAngle += rotationSpeed;
-        
-        // Shift colors continuously
-        globalHue = (globalHue + 0.5) % 360;
+            let friction = engineState === "MATRIX" ? 0.75 : 0.96;
+            this.vx *= friction;
+            this.vy *= friction;
 
-        // 3D Pitch simulation (makes the orbit look like it's tilting in 3D space)
-        let pitch = Math.sin(time * 0.8);
+            this.x += this.vx;
+            this.y += this.vy;
+            this.phase += 0.05 + (this.heat * 0.1);
 
-        // 3. Inverse Kinematics Logic (The Spring Tails)
-        for (let k = 0; k < NUM_STRANDS; k++) {
-            // Distribute the strands evenly in a circle
-            let offsetAngle = (k / NUM_STRANDS) * Math.PI * 2;
-            let phase = baseAngle + offsetAngle;
+            if (this.x < -50) this.x += width + 100;
+            if (this.x > width + 50) this.x -= width + 100;
+            if (this.y < -50) this.y += height + 100;
+            if (this.y > height + 50) this.y -= height + 100;
 
-            // Update the Head (Segment 0) of this specific strand using 3D projected math
-            strands[k][0].x = headX + Math.cos(phase) * window.currentRadius;
-            // The 'pitch' variable squishes the Y axis, creating a flawless 3D tilt illusion
-            strands[k][0].y = headY + Math.sin(phase) * window.currentRadius * pitch;
-
-            // The rest of the segments smoothly trail behind their parent segment
-            for (let j = 1; j < NUM_SEGMENTS; j++) {
-                // The delay creates the beautiful, fluid, snake-like sweeping motion
-                let drag = 0.35; // Lower is looser/longer, Higher is stiffer/tighter
-                strands[k][j].x += (strands[k][j-1].x - strands[k][j].x) * drag;
-                strands[k][j].y += (strands[k][j-1].y - strands[k][j].y) * drag;
+            let cx = ~~ (this.x / GRID_SIZE);
+            let cy = ~~ (this.y / GRID_SIZE);
+            if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+                grid[cy * cols + cx].push(this);
             }
         }
+    }
 
-        // --- RENDERING ---
-
-        // Clear the screen with a fade. 
-        // We use a dark background so the colors NEVER blow out to white.
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(2, 4, 8, 0.2)'; 
-        ctx.fillRect(0, 0, width, height);
-
-        // Screen blending makes the overlapping neon colors intensely vibrant
-        ctx.globalCompositeOperation = 'screen';
-
-        // A. Draw the cross-section "Ribs" to give it a 3D cylindrical mesh look
-        // We only draw every 5th segment to keep it looking clean and geometric
-        for (let j = 0; j < NUM_SEGMENTS; j += 6) {
-            ctx.beginPath();
-            for (let k = 0; k < NUM_STRANDS; k++) {
-                ctx.lineTo(strands[k][j].x, strands[k][j].y);
-            }
-            ctx.closePath();
+    // 2. AURA NODES (The 3D Holographic Formations)
+    class AuraNode {
+        constructor(id) {
+            this.id = id;
+            this.angle = Math.random() * Math.PI * 2;
             
-            // Ribs fade out towards the tail
-            let opacity = 0.15 * (1 - (j / NUM_SEGMENTS));
-            ctx.strokeStyle = `hsla(${globalHue}, 100%, 70%, ${opacity})`;
-            ctx.lineWidth = 1;
+            // Assign roles: 0, 1, 2 = Rings, 3 = Magnetic Stream
+            this.role = id % 4; 
+            
+            if (this.role < 3) {
+                this.radius = 280 + (this.role * 140) + (Math.random() * 20 - 10);
+                this.speed = (this.role % 2 === 0 ? 1 : -1) * (0.005 + Math.random() * 0.005);
+                this.hue = 180 + (this.role * 30); // Cyan to Deep Blue
+            } else {
+                this.radius = 180 + Math.random() * 100;
+                this.y = (Math.random() - 0.5) * height * 2;
+                this.speed = 2 + Math.random() * 3;
+                this.hue = 300 + Math.random() * 40; // Fuchsia/Pink
+            }
+            
+            this.x2d = 0;
+            this.y2d = 0;
+            this.scale = 1;
+            this.alpha = 1;
+            this.trail = [];
+        }
+
+        update() {
+            let cx = width / 2;
+            let cy = height / 2;
+
+            if (engineState === "SINGULARITY") {
+                // Sucked into the Accretion Disk
+                this.radius *= 0.95;
+                if (this.radius < 50) this.radius = 50;
+                this.angle += this.speed * 10; // Spin furiously
+                if (this.role === 3) this.y *= 0.9; // Crush vertical streams flat
+                this.hue = 0; // Turn white-hot
+            } else if (engineState === "DETONATION") {
+                // Blown outward
+                this.radius += 50;
+                this.angle += this.speed * 5;
+            } else {
+                // NORMAL 3D OPERATION
+                // Restore original geometry smoothly
+                if (this.role < 3) {
+                    let targetRadius = 280 + (this.role * 140);
+                    this.radius += (targetRadius - this.radius) * 0.05;
+                    this.angle += this.speed;
+                    this.hue += ((180 + (this.role * 30)) - this.hue) * 0.05;
+                } else {
+                    let targetRadius = 180 + Math.random() * 100;
+                    this.radius += (targetRadius - this.radius) * 0.01;
+                    this.y -= this.speed;
+                    this.angle += 0.02;
+                    if (this.y < -height) this.y = height;
+                    this.hue += ((300 + Math.random() * 40) - this.hue) * 0.05;
+                }
+            }
+
+            // --- THE 3D PROJECTION MATH ---
+            let px, py, pz;
+            
+            if (this.role < 3) {
+                // Orbital Rings (Tilting in 3D space)
+                let tilt = 0.5 + (this.role * 0.2); // Base pitch tilt
+                px = Math.cos(this.angle) * this.radius;
+                pz = Math.sin(this.angle) * this.radius;
+                py = pz * tilt; 
+                pz = pz * (1 - tilt);
+            } else {
+                // Magnetic Streams (Double Helix Cylinder)
+                px = Math.cos(this.angle) * this.radius;
+                pz = Math.sin(this.angle) * this.radius;
+                py = this.y;
+            }
+
+            // Apply Parallax Camera Sway
+            px -= camX * (pz * 0.005 + 1);
+            py -= camY * (pz * 0.005 + 1);
+
+            // Perspective scale based on Z-depth
+            const fov = 800;
+            this.scale = fov / (fov + pz);
+            
+            this.x2d = cx + px * this.scale;
+            this.y2d = cy + py * this.scale;
+            
+            // Alpha fading for objects far in the background
+            this.alpha = Math.min(1, Math.max(0.1, this.scale - 0.5));
+            if (engineState === "SINGULARITY") this.alpha = 1.0;
+
+            // Trail for 3D motion blur
+            this.trail.push({ x: this.x2d, y: this.y2d });
+            if (this.trail.length > 4) this.trail.shift();
+        }
+
+        draw() {
+            if (this.trail.length < 2) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(this.trail[0].x, this.trail[0].y);
+            for (let i = 1; i < this.trail.length; i++) {
+                ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            }
+            
+            // Draw holographic glowing lines
+            ctx.strokeStyle = `hsla(${this.hue}, 100%, ${engineState==="SINGULARITY"? 90 : 65}%, ${this.alpha * 0.6})`;
+            ctx.lineWidth = 1.5 * this.scale;
+            ctx.lineCap = "round";
             ctx.stroke();
-        }
 
-        // B. Draw the glowing longitudinal strands (The light trails)
-        for (let k = 0; k < NUM_STRANDS; k++) {
+            // Draw leading spark
             ctx.beginPath();
-            ctx.moveTo(strands[k][0].x, strands[k][0].y);
-            for (let j = 1; j < NUM_SEGMENTS; j++) {
-                ctx.lineTo(strands[k][j].x, strands[k][j].y);
-            }
-
-            // Each strand gets a slightly different hue for a gorgeous rainbow spectrum effect
-            let strandHue = globalHue + (k / NUM_STRANDS) * 120; 
-            
-            ctx.strokeStyle = `hsla(${strandHue}, 100%, 65%, 0.8)`;
-            
-            // Thick at the head, tapering down to a razor-thin point at the tail
-            ctx.lineWidth = 3; 
-            ctx.stroke();
-            
-            // Add a bright core to the head of the strand
-            ctx.beginPath();
-            ctx.arc(strands[k][0].x, strands[k][0].y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFF';
+            ctx.arc(this.x2d, this.y2d, 1.2 * this.scale, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${this.hue}, 100%, 85%, ${this.alpha})`;
             ctx.fill();
         }
+    }
 
-        // Update UI Telemetry
-        if (time % 0.15 < 0.02) { // Throttle DOM updates
-            statRadius.innerText = Math.floor(window.currentRadius) + "px";
-            // Convert the Math.sin pitch to a readable degree format
-            statPitch.innerText = Math.abs(Math.floor(pitch * 90)) + "°";
+    function drawFractalLine(x1, y1, x2, y2, heat, phase) {
+        if (heat < 0.2) {
+            ctx.lineTo(x2, y2);
+            return;
+        }
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let dist = Math.hypot(dx, dy);
+        
+        let mx = x1 + dx * 0.5;
+        let my = y1 + dy * 0.5;
+
+        let foldAngle = Math.atan2(dy, dx) + (Math.PI / 2) * Math.sin(phase);
+        let foldDist = dist * 0.12 * heat * Math.cos(phase * 1.2);
+
+        let fx = mx + Math.cos(foldAngle) * foldDist;
+        let fy = my + Math.sin(foldAngle) * foldDist;
+
+        ctx.lineTo(fx, fy);
+        ctx.lineTo(x2, y2);
+    }
+
+    for (let i = 0; i < NUM_CORE; i++) coreNodes.push(new CoreNode());
+    for (let i = 0; i < NUM_AURA; i++) auraNodes.push(new AuraNode(i));
+
+    function drawOracleMask(context, yOffset) {
+        context.save();
+        context.translate(width/2, height/2 + yOffset);
+        
+        context.strokeStyle = 'white';
+        context.lineWidth = 10; 
+        context.lineJoin = "miter";
+        context.shadowBlur = 10;
+        context.shadowColor = 'white';
+
+        context.beginPath();
+        context.moveTo(0, -150);
+        context.lineTo(90, -30);
+        context.lineTo(0, 120);
+        context.lineTo(-90, -30);
+        context.closePath();
+        context.stroke();
+
+        context.lineWidth = 5;
+        context.beginPath();
+        context.moveTo(0, -90);
+        context.lineTo(40, -30);
+        context.lineTo(0, 50);
+        context.lineTo(-40, -30);
+        context.closePath();
+        context.stroke();
+
+        context.fillStyle = 'white';
+        context.fillRect(-35, -35, 20, 5);
+        context.fillRect(15, -35, 20, 5);
+        context.fillRect(-25, -10, 10, 3);
+        context.fillRect(15, -10, 10, 3);
+        
+        context.beginPath();
+        context.arc(0, -65, 8, 0, Math.PI * 2);
+        context.fill();
+
+        context.restore();
+    }
+
+    function scanTargets() {
+        osCtx.clearRect(0, 0, width, height);
+        drawOracleMask(osCtx, -120);
+        
+        osCtx.fillStyle = 'white';
+        osCtx.shadowBlur = 10; 
+        osCtx.shadowColor = 'white';
+        osCtx.font = "900 120px 'Cinzel', serif"; 
+        osCtx.textAlign = "center";
+        osCtx.letterSpacing = "25px"; 
+        osCtx.fillText(currentWord.toUpperCase(), width/2, height/2 + 180);
+
+        const imageData = osCtx.getImageData(0, 0, width, height).data;
+        let targets = [];
+        
+        for (let y = 0; y < height; y += 4) {
+            for (let x = 0; x < width; x += 4) {
+                let alpha = imageData[(y * width + x) * 4 + 3];
+                if (alpha > 80 && Math.random() < (alpha / 255)) {
+                    targets.push({ 
+                        x: x + (Math.random() - 0.5) * 1.5, 
+                        y: y + (Math.random() - 0.5) * 1.5 
+                    });
+                }
+            }
+        }
+
+        targets = targets.sort(() => Math.random() - 0.5);
+        
+        for (let i = 0; i < coreNodes.length; i++) {
+            if (i < targets.length) {
+                coreNodes[i].tx = targets[i].x;
+                coreNodes[i].ty = targets[i].y;
+                coreNodes[i].isTarget = true; 
+            } else {
+                coreNodes[i].isTarget = false; 
+            }
+        }
+    }
+
+    async function cycleEngine() {
+        statState.innerText = "FETCHING LEXICON";
+        statState.className = "text-sm hud-value text-yellow-400";
+        
+        try {
+            const response = await fetch('https://random-word-api.herokuapp.com/word?length=7');
+            const data = await response.json();
+            currentWord = data[0];
+        } catch (err) { currentWord = "ORACLE"; }
+
+        setTimeout(() => {
+            hudWord.innerText = currentWord.toUpperCase();
+            statState.innerText = "GRAVITATIONAL COLLAPSE";
+            statState.className = "text-sm hud-value text-fuchsia-400";
+            
+            let utterance = new SpeechSynthesisUtterance(currentWord);
+            utterance.pitch = 0.1; 
+            utterance.rate = 0.6; 
+            
+            utterance.onstart = () => { engineState = "SINGULARITY"; };
+            
+            utterance.onend = () => {
+                engineState = "DETONATION";
+                statState.innerText = "HOLOGRAPHIC MAPPING";
+                statState.className = "text-sm hud-value text-cyan-400";
+                
+                scanTargets();
+                
+                setTimeout(() => {
+                    engineState = "MATRIX";
+                    setTimeout(cycleEngine, 6500); 
+                }, 150); 
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }, 1000);
+    }
+
+    // Parallax Input Tracking
+    window.addEventListener('mousemove', (e) => {
+        targetCamX = (e.clientX - width / 2) * 0.4;
+        targetCamY = (e.clientY - height / 2) * 0.4;
+    });
+
+    function animate() {
+        frame++;
+
+        // Smooth camera easing
+        camX += (targetCamX - camX) * 0.05;
+        camY += (targetCamY - camY) * 0.05;
+
+        // Apply camera shift to canvas context for the core nodes
+        ctx.save();
+        ctx.translate(-camX * 0.3, -camY * 0.3); // Core moves slightly, Auras move heavily
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = engineState === "SINGULARITY" ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.25)'; 
+        // Expand fillRect to cover translated area
+        ctx.fillRect(-500, -500, width + 1000, height + 1000);
+
+        ctx.globalCompositeOperation = 'lighter';
+
+        // --- DRAW CORE NODES (Fractal Lattice) ---
+        for(let i = 0; i < grid.length; i++) grid[i].length = 0;
+        
+        let linksThisFrame = 0;
+        coreNodes.forEach(n => n.update());
+
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        const CONNECT_DIST = 22; 
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                let cellNodes = grid[y * cols + x];
+                if (cellNodes.length === 0) continue;
+
+                let neighbors = [];
+                for (let ny = -1; ny <= 1; ny++) {
+                    for (let nx = -1; nx <= 1; nx++) {
+                        let nc = x + nx, nr = y + ny;
+                        if (nc >= 0 && nc < cols && nr >= 0 && nr < rows) {
+                            neighbors.push(nr * cols + nc);
+                        }
+                    }
+                }
+
+                for (let i = 0; i < cellNodes.length; i++) {
+                    let n1 = cellNodes[i];
+                    if (n1.heat < 0.1) continue;
+
+                    let links = 0;
+                    for (let nIdx of neighbors) {
+                        let neighborNodes = grid[nIdx];
+                        for (let k = 0; k < neighborNodes.length; k++) {
+                            let n2 = neighborNodes[k];
+                            
+                            if (n1 === n2 || n1.x > n2.x || links > 3) continue;
+                            if (n2.heat < 0.1) continue;
+
+                            let dx = n1.x - n2.x;
+                            let dy = n1.y - n2.y;
+                            let distSq = dx*dx + dy*dy;
+
+                            if (distSq < CONNECT_DIST * CONNECT_DIST) {
+                                let dist = Math.sqrt(distSq);
+                                linksThisFrame++;
+                                links++;
+                                
+                                let avgHeat = (n1.heat + n2.heat) / 2;
+                                let hue = 180 + (avgHeat * 120); 
+                                let opacity = (1 - (dist / CONNECT_DIST)) * avgHeat;
+                                
+                                ctx.strokeStyle = `hsla(${hue}, 100%, 75%, ${opacity})`;
+                                ctx.beginPath();
+                                ctx.moveTo(n1.x, n1.y);
+                                drawFractalLine(n1.x, n1.y, n2.x, n2.y, avgHeat, n1.phase);
+                                ctx.stroke();
+                                
+                                let avgPhase = (n1.phase + n2.phase) / 2;
+                                n1.phase = avgPhase;
+                                n2.phase = avgPhase;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        coreNodes.forEach(n => {
+            if (n.heat > 0.2) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 1.5, 0, Math.PI * 2);
+                let hue = 180 + (n.heat * 120);
+                ctx.fillStyle = `hsla(${hue}, 100%, 90%, ${n.heat})`;
+                ctx.fill();
+            }
+        });
+
+        // Restore context so Auras handle their own 3D parallax offsets
+        ctx.restore();
+
+        // --- DRAW 3D AURA NODES ---
+        // We sort the Auras by scale so the ones "closest" to the camera draw on top
+        auraNodes.sort((a, b) => a.scale - b.scale);
+        auraNodes.forEach(a => {
+            a.update();
+            a.draw();
+        });
+
+        if (frame % 5 === 0) {
+            statLinks.innerText = linksThisFrame.toLocaleString();
         }
 
         requestAnimationFrame(animate);
     }
 
-    // --- INTERACTION ---
-
-    function setMousePos(e) {
-        if (e.touches && e.touches.length > 0) {
-            targetX = e.touches[0].clientX;
-            targetY = e.touches[0].clientY;
-        } else {
-            targetX = e.clientX;
-            targetY = e.clientY;
-        }
-        idleTimer = 0; // Stop the automatic wandering
-    }
-
-    // Desktop
-    window.addEventListener('mousedown', (e) => {
-        isDrawing = true;
-        setMousePos(e);
+    document.getElementById('init-overlay').addEventListener('click', () => {
+        document.getElementById('init-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('init-overlay').style.display = 'none';
+            document.getElementById('ui-layer').style.opacity = '1';
+        }, 1000);
+        
+        animate();
+        cycleEngine(); 
     });
-    window.addEventListener('mousemove', (e) => {
-        setMousePos(e);
-    });
-    window.addEventListener('mouseup', () => { isDrawing = false; });
-
-    // Mobile
-    window.addEventListener('touchstart', (e) => {
-        isDrawing = true;
-        setMousePos(e);
-    }, { passive: false });
-    window.addEventListener('touchmove', (e) => {
-        setMousePos(e);
-        e.preventDefault(); // Prevents screen scrolling while dragging
-    }, { passive: false });
-    window.addEventListener('touchend', () => { isDrawing = false; });
-
-    // Boot
-    animate();
 })();
 </script>
 </body>
